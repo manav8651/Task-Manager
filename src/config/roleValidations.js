@@ -1,0 +1,5 @@
+export const allowedMarkComplete = [3,4]
+export const allowedCreateTask = [1,2]
+export const allowedEditTask = [1,2]
+export const allowedDeleteTask = [1,2,3]
+export const allowedManageRoles = [1]
