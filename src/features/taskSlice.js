@@ -3,10 +3,20 @@ import { createSlice } from "@reduxjs/toolkit";
 let initialState = [];
 
 try {
-  const serialData = window.localStorage.getItem("taskList");
-  initialState = JSON.parse(serialData);
+  let data = window.localStorage.getItem("taskList")
+
+  try {
+    data = JSON.parse(data)
+
+    if (data) {
+      initialState = data
+    }
+  } catch (err) {
+    console.log('error parsing the data: ', err);
+    initialState = []
+  }
 } catch (err) {
-  alert("Something went wrong in fetching the Task List!");
+  alert("Something went wrong in fetching the Task List!")
   console.log(err);
 }
 
@@ -34,7 +44,7 @@ export const taskSlice = createSlice({
       const id = state.length;
 
       try {
-        state.push({ title: title, id: id });
+        state.push({ title: title, id: id, checked: false });
         window.localStorage.setItem("taskList", JSON.stringify(state));
       } catch (err) {
         alert("Something went wrong!");
@@ -58,7 +68,7 @@ export const taskSlice = createSlice({
       const objIndex = state.findIndex((obj) => obj.id == id);
       state[objIndex].title = updatedTitle;
 
-    //   Updating the localstorage
+      //   Updating the localstorage
       try {
         window.localStorage.setItem("taskList", JSON.stringify(state));
         // return st;
@@ -67,12 +77,26 @@ export const taskSlice = createSlice({
         console.log(err);
       }
     },
-    markCompleted: (state, action) => {},
+    toggleChecked: (state, action) => {
+
+      const id = action.payload.id;
+      const objIndex = state.findIndex((obj) => obj.id == id);
+      state[objIndex].checked = !state[objIndex].checked;
+
+      //   Updating the localstorage
+      try {
+        window.localStorage.setItem("taskList", JSON.stringify(state));
+
+      } catch (err) {
+        alert("Something went wrong!");
+        console.log(err);
+      }
+    },
   },
 });
 
 // Action creators are generated for each case reducer function
-export const { addTask, editTask, deleteTask, markCompleted } =
+export const { addTask, editTask, deleteTask, toggleChecked } =
   taskSlice.actions;
 
 export default taskSlice.reducer;
