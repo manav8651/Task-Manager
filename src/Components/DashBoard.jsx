@@ -5,6 +5,10 @@ import {
   IconButton,
   TextField,
   Typography,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select
 } from "@mui/material";
 import Navbar from "./Navbar";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,18 +16,23 @@ import {
   addTask,
   editTask,
   deleteTask,
-  markCompleted,
+  toggleChecked,
 } from "../features/taskSlice";
 import {
-    allowedCreateTask,
+  allowedCreateTask,
   allowedDeleteTask,
   allowedEditTask,
   allowedMarkComplete,
 } from "../config/roleValidations";
+import { updateUserRole } from "../features/usersSlice";
 
 const Dashboard = () => {
   const taskList = useSelector((state) => state.task);
   const authData = useSelector((state) => state.auth);
+  const userData = useSelector((state) => state.user)
+
+
+  const role = authData?.role
 
   const dispatch = useDispatch();
 
@@ -34,13 +43,17 @@ const Dashboard = () => {
 
   const refEnterTask = useRef();
 
+  const handleRoleChange = ({ email, role }) => {
+    dispatch(updateUserRole({ email: email, role: role }))
+  }
+
   const handleEnter = () => {
     if (addBoolean) {
-        if(allowedCreateTask.includes(authData?.role)){
-            dispatch(addTask({ title: refEnterTask.current.value }));
-        }else{
-            alert('Your role is not allowed to create tasks!')
-        }
+      if (allowedCreateTask.includes(authData?.role)) {
+        dispatch(addTask({ title: refEnterTask.current.value }));
+      } else {
+        alert('Your role is not allowed to create tasks!')
+      }
     } else {
       dispatch(
         editTask({ id: editItem.id, newTitle: refEnterTask.current.value })
@@ -59,26 +72,31 @@ const Dashboard = () => {
         height: "100vh",
       }}
     >
-      <Navbar />
+      <Navbar user_name={authData.name} user_role={authData.role} />
 
       <Box
         sx={{
           display: "flex",
+          flexWrap: 'wrap',
           justifyContent: "center",
+          alignItems: 'center',
+          width: '100%',
           mt: "4rem",
+          gap: '4rem'
         }}
       >
         {/* Todo Box */}
 
         <Box
           sx={{
+            margin: 'auto',
             display: "flex",
             flexDirection: "column",
             gap: "1rem",
             padding: "2rem",
             borderRadius: "2rem",
             backgroundColor: "#000E20",
-            width: { md: "40%", sm: "50%", xs: "80%" },
+            width: '35%',
             height: "60vh",
           }}
         >
@@ -89,6 +107,7 @@ const Dashboard = () => {
             placeholder="Enter Task..."
             inputRef={refEnterTask}
             sx={{
+              "& fieldset": { border: 'none' },
               borderRadius: "2rem",
               backgroundColor: "white",
             }}
@@ -131,13 +150,25 @@ const Dashboard = () => {
                             display: "flex",
                             gap: "1rem",
                             color: "white",
+                            alignItems: 'flex-start'
                           }}
                         >
-                          {allowedMarkComplete.includes(authData?.role) ? (
-                            <Checkbox color={"primary"} />
-                          ) : (
-                            <></>
-                          )}
+
+                          <Checkbox
+                            defaultChecked={item.checked}
+                            onChange={() => dispatch(toggleChecked({ id: item.id }))}
+                            sx={{
+                              mt: '-0.25rem',
+                              color: "#ffffff90",
+                              '&.Mui-disabled': {
+                                color: '#ffffff50'
+                              }
+                            }}
+                            disabled={!allowedMarkComplete.includes(authData?.role)}
+                            // onClick={}
+                          />
+
+
                           <Typography variant="body1" fontSize={"1.25rem"}>
                             {item.title}
                           </Typography>
@@ -169,7 +200,7 @@ const Dashboard = () => {
                                 dispatch(deleteTask({ id: item.id }));
                               }}
                             >
-                              <img src="/images/delete_icon.svg" alt="edit" />
+                              <img style={{ marginTop: '-2px' }} src="/images/delete_icon.svg" alt="edit" />
                             </IconButton>
                           ) : (
                             <></>
@@ -186,7 +217,64 @@ const Dashboard = () => {
 
         {/* User Box */}
 
-        <Box></Box>
+        {role == 1 ?
+          <Box sx={{
+            margin: 'auto',
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+            padding: "2rem",
+            borderRadius: "2rem",
+            backgroundColor: "#000E20",
+            width: "35%",
+            height: "60vh",
+          }}>
+
+            <Typography variant="h6" color={'white'} mb={'1rem'}>Manage User Roles</Typography>
+
+            {userData?.map((item) => {
+
+              return (
+
+
+                <Box key={item.email} sx={{ display: 'flex', gap: '1.5rem' }}>
+                  <FormControl>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={item.role}
+                      label="Age"
+                      size="small"
+                      sx={{
+                        "& fieldset": { border: 'none' },
+                        borderRadius: '2rem',
+                        height: '2rem',
+                        width: '130px',
+                        color: 'black',
+                        backgroundColor: '#9DA3AB'
+                      }}
+                      onChange={(e) => handleRoleChange({ email: item.email, role: e.target.value })}
+                      inputProps={{ style: { color: 'white' } }}
+                    >
+                      <MenuItem value={1}>Admin</MenuItem>
+                      <MenuItem value={2}>Controller</MenuItem>
+                      <MenuItem value={3}>Head Coach</MenuItem>
+                      <MenuItem value={4}>Coach</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <Typography color={'white'}>{item.name}</Typography>
+                </Box>
+
+              )
+
+            })}
+
+
+
+          </Box>
+          : <></>}
+
+
       </Box>
     </Box>
   );
